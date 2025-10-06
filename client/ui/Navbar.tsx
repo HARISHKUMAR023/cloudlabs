@@ -1,8 +1,8 @@
 "use client";
+import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { MdNotificationsNone, MdAccountCircle, MdPalette, MdChevronRight } from "react-icons/md";
-import { usePathname } from "next/navigation";
+import { MdAccountCircle, MdChevronRight, MdNotificationsNone, MdPalette } from "react-icons/md";
 
 interface Theme {
   name: string;
@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ setTheme }) => {
   ];
 
   return (
-<header className="w-full flex items-center justify-between px-4 py-2 z-50 backdrop-blur-lg bg-black/50 sticky top-0">
+<header className="w-full flex items-center justify-between px-4 py-2 z-50 backdrop-blur-lg bg-black/35 sticky top-0">
   {/* Left: Logo + Breadcrumb */}
   <div className="flex items-center gap-4">
     {/* Logo */}

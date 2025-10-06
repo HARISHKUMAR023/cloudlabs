@@ -1,15 +1,15 @@
 "use client";
-import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
+import { useState } from "react";
+import {
   MdHomeFilled,
   MdOutlineDeviceHub,
-  MdStorage,
-  MdSettings,
   MdOutlineKeyboardArrowDown,
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
+  MdSettings,
+  MdStorage,
 } from "react-icons/md";
 
 const Sidebar = () => {
@@ -39,7 +39,7 @@ const Sidebar = () => {
       title: "Machine",
       icon: MdOutlineDeviceHub,
       children: [
-        { title: "My Machine", path: "/machine/my-machine" },
+        { title: "My Machine", path: "/Dashboard/Machine" },
         { title: "Deploy Machine", popup: true },
       ]
     },
@@ -56,7 +56,7 @@ const Sidebar = () => {
 
   return (
     <div 
-      className={`h-screen backdrop-blur-lg bg-black/50 text-white z-50 ${
+      className={`h-screen backdrop-blur-lg bg-black/35 text-white z-50 ${
         isOpen ? "w-64" : "w-20"
       } transition-all duration-300 ease-in-out flex flex-col shadow-lg relative`}
     >
