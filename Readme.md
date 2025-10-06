@@ -1,4 +1,5 @@
 # Cloud Lab  
+<img width="1909" height="936" alt="image" src="https://github.com/user-attachments/assets/2de6fdba-43e4-497c-b6b1-36afd6bd20f8" />
 
 Cloud Lab is a **self-hosted platform** built using Docker.  
 It provides users with a **Linux machine (Ubuntu) pre-configured with VS Code**, so they can directly develop software inside the lab environment.  
