@@ -1,8 +1,15 @@
+
 "use client";
+
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { MdAccountCircle, MdChevronRight, MdNotificationsNone, MdPalette } from "react-icons/md";
+import {
+  MdAccountCircle,
+  MdChevronRight,
+  MdNotificationsNone,
+  MdPalette,
+} from "react-icons/md";
 
 interface Theme {
   name: string;
@@ -18,99 +25,151 @@ const Navbar: React.FC<NavbarProps> = ({ setTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  // Split path for breadcrumb
   const pathParts = pathname?.split("/").filter(Boolean) || [];
 
   const themes: Theme[] = [
-    { name: "The Robot 1", value: "bg-[url('/images/bg.jpg')] bg-cover bg-center", preview: "/images/bg.jpg" },
-    { name: "The Robot 2", value: "bg-[url('/images/bg1.jpg')] bg-cover bg-center", preview: "/images/bg1.jpg" },
-    { name: "The Robot 3", value: "bg-[url('/images/bg2.jpg')] bg-cover bg-center", preview: "/images/bg2.jpg" },
-    { name: "The Robot 4", value: "bg-[url('/images/bg3.jpg')] bg-cover bg-center", preview: "/images/bg3.jpg" },
-    { name: "The Robot 5", value: "bg-[url('/images/bg4.jpg')] bg-cover bg-center", preview: "/images/bg4.jpg" },
+    {
+      name: "The Robot 1",
+      value: "bg-[url('/images/bg.jpg')] bg-cover bg-center",
+      preview: "/images/bg.jpg",
+    },
+    {
+      name: "The Robot 2",
+      value: "bg-[url('/images/bg1.jpg')] bg-cover bg-center",
+      preview: "/images/bg1.jpg",
+    },
+    {
+      name: "The Robot 3",
+      value: "bg-[url('/images/bg2.jpg')] bg-cover bg-center",
+      preview: "/images/bg2.jpg",
+    },
+    {
+      name: "The Robot 4",
+      value: "bg-[url('/images/bg3.jpg')] bg-cover bg-center",
+      preview: "/images/bg3.jpg",
+    },
+    {
+      name: "The Robot 5",
+      value: "bg-[url('/images/bg4.jpg')] bg-cover bg-center",
+      preview: "/images/bg4.jpg",
+    },
   ];
 
   return (
-<header className="w-full flex items-center justify-between px-4 py-2 z-50 backdrop-blur-lg bg-black/35 sticky top-0">
-  {/* Left: Logo + Breadcrumb */}
-  <div className="flex items-center gap-4">
-    {/* Logo */}
-    {/* <h1 className="text-white font-bold text-lg">Cloud Lab</h1> */}
+    <>
+      <header className="relative z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-white/10 bg-[#111318]/75 px-4 backdrop-blur-2xl sm:px-6">
+        {/* Breadcrumb */}
+        <nav className="flex min-w-0 items-center gap-2 overflow-hidden text-sm text-white/70">
+          <span className="shrink-0">Home</span>
 
-    {/* Breadcrumb */}
-    <nav className="flex items-center text-sm text-white/70 space-x-2">
-      <span>Home</span>
-      {pathParts.map((part, idx) => (
-        <React.Fragment key={idx}>
-          <MdChevronRight size={16} />
-          <span className="capitalize">{part.replace("-", " ")}</span>
-        </React.Fragment>
-      ))}
-    </nav>
-  </div>
+          {pathParts.map((part, idx) => (
+            <React.Fragment key={`${part}-${idx}`}>
+              <MdChevronRight className="shrink-0" size={16} />
+              <span className="truncate capitalize">
+                {part.replace(/-/g, " ")}
+              </span>
+            </React.Fragment>
+          ))}
+        </nav>
 
-  {/* Right: Actions */}
-  <div className="flex items-center gap-4">
-    {/* Theme Selector */}
-    <button
-      onClick={() => setIsOpen(true)}
-      className="p-2 rounded-lg hover:bg-white/10 transition-colors duration-200 text-white flex items-center gap-1"
-    >
-      <MdPalette size={24} />
-      <span className="hidden md:block text-sm">Theme</span>
-    </button>
+        {/* Actions */}
+        <div className="ml-3 flex shrink-0 items-center gap-1 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            aria-label="Choose background theme"
+            className="flex items-center gap-1 rounded-lg p-2 text-white transition-colors hover:bg-white/10"
+          >
+            <MdPalette size={24} />
+            <span className="hidden text-sm md:block">Theme</span>
+          </button>
 
-    {/* Notifications */}
-    <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors duration-200 text-white">
-      <MdNotificationsNone size={24} />
-      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
-    </button>
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative rounded-lg p-2 text-white transition-colors hover:bg-white/10"
+          >
+            <MdNotificationsNone size={24} />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+          </button>
 
-    {/* User */}
-    <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200 cursor-pointer">
-      <MdAccountCircle size={28} />
-      <span className="hidden md:block text-white text-sm font-medium">Harish</span>
-    </div>
-  </div>
-
-  {/* Theme Modal */}
-  {isOpen &&
-    createPortal(
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] flex items-center justify-center"
-        onClick={() => setIsOpen(false)}
-      >
-        <div
-          className="bg-black/70 backdrop-blur-md border border-white/20 rounded-lg shadow-lg w-5/12 max-w-lg max-h-[80vh] overflow-y-auto p-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 className="text-white text-lg font-semibold mb-4">Choose Background</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {themes.map((theme) => (
-              <button
-                key={theme.name}
-                onClick={() => {
-                  setTheme(theme.value);
-                  setIsOpen(false);
-                }}
-                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform rounded-lg"
-              >
-                {theme.preview && (
-                  <div
-                    className="w-full h-24 rounded-md bg-cover bg-center border border-white/30"
-                    style={{ backgroundImage: `url(${theme.preview})` }}
-                  />
-                )}
-                <span className="text-white text-sm">{theme.name}</span>
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            aria-label="User profile"
+            className="flex items-center gap-2 rounded-lg p-2 text-white transition-colors hover:bg-white/10"
+          >
+            <MdAccountCircle size={28} />
+            <span className="hidden text-sm font-medium md:block">
+              Harish
+            </span>
+          </button>
         </div>
-      </div>,
-      document.body
-    )}
-</header>
+      </header>
 
+      {/* Theme modal */}
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="theme-modal-title"
+              className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/20 bg-[#111318]/95 p-4 shadow-2xl backdrop-blur-xl sm:p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3
+                  id="theme-modal-title"
+                  className="text-lg font-semibold text-white"
+                >
+                  Choose Background
+                </h3>
 
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close theme selector"
+                  className="rounded-md px-2 py-1 text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {themes.map((theme) => (
+                  <button
+                    key={theme.name}
+                    type="button"
+                    onClick={() => {
+                      setTheme(theme.value);
+                      setIsOpen(false);
+                    }}
+                    className="flex min-w-0 flex-col items-center gap-2 rounded-lg transition-transform hover:scale-[1.02]"
+                  >
+                    {theme.preview && (
+                      <div
+                        className="h-24 w-full rounded-md border border-white/30 bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url("${theme.preview}")`,
+                        }}
+                      />
+                    )}
+
+                    <span className="text-center text-sm text-white">
+                      {theme.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 };
 
