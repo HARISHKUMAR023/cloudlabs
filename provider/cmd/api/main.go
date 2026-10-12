@@ -31,7 +31,7 @@ import (
 func main() {
 	// Load .env from the project root.
 	// This path assumes you run the application from cmd/api.
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Printf("Warning: could not load .env file: %v", err)
 	}
 	// Read environment variables.
@@ -71,7 +71,9 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
 	})
-
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/register", handler.Register)
 		r.Post("/auth/login", handler.Login)
@@ -80,9 +82,7 @@ func main() {
 			r.Use(handler.JWTAuth)
 			r.Get("/users/me", handler.Me)
 		})
-		r.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL("/swagger/doc.json"),
-		))
+
 	})
 
 	// Start HTTP server.
