@@ -1,8 +1,28 @@
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y wget curl git sudo software-properties-common \
-    && apt-get clean
-RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN useradd -m coder && echo "coder:coder" | chpasswd && adduser coder sudo
-WORKDIR /home/coder
-EXPOSE 8080
-CMD ["sh", "-c", "code-server --bind-addr 0.0.0.0:8080 --auth password --password $PASSWORD"]
+
+# Build stage
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /app
+
+COPY provider/go.mod provider/go.sum ./provider/
+WORKDIR /app/provider
+
+RUN go mod download
+
+COPY provider/ .
+
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -o /out/cloudlabs-api ./cmd/api
+
+# Runtime stage
+FROM alpine:3.22
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+COPY --from=builder /out/cloudlabs-api ./cloudlabs-api
+
+EXPOSE 8000
+
+CMD ["./cloudlabs-api"]

@@ -1,0 +1,31 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: cloudlabs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cloudlabs
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloudlabs-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://admin:${POSTGRES_PASSWORD}@postgres:5432/cloudlabs?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

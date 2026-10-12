@@ -1,0 +1,24 @@
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+
+# Go
+/provider/bin/
+/provider/*.out
+/provider/coverage.*
+
+# Node.js / Next.js
+node_modules/
+.next/
+out/
+dist/
+
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log

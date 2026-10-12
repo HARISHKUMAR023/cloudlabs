@@ -1,0 +1,16 @@
+basePath: /
+info:
+  contact: {}
+  description: API documentation for the Cloud Lab platform.
+  title: Cloud Lab API
+  version: "1.0"
+paths: {}
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter your JWT token as: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
