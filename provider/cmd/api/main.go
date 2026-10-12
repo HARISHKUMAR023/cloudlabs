@@ -31,10 +31,9 @@ import (
 func main() {
 	// Load .env from the project root.
 	// This path assumes you run the application from cmd/api.
-	if err := godotenv.Load("../../.env"); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Printf("Warning: could not load .env file: %v", err)
 	}
-
 	// Read environment variables.
 	databaseURL := os.Getenv("DATABASE_URL")
 	jwtSecret := os.Getenv("JWT_SECRET")
