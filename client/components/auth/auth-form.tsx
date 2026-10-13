@@ -164,7 +164,7 @@ saveTokens({
       ? payload.expires_in
       : 900,
 });
-window.location.replace("/dashboard");
+window.location.replace("/Dashboard");
     } catch (submitError) {
       if (submitError instanceof TypeError) {
         setError(
