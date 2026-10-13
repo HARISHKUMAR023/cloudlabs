@@ -75,8 +75,11 @@ const steps = [
 ];
 
 export default function Page() {
+
+ 
   return (
     <main className="min-h-screen text-white">
+      
       <div className="mx-auto max-w-7xl space-y-16">
         {/* Hero */}
         <section className="grid items-center gap-10 pt-6 lg:grid-cols-2">

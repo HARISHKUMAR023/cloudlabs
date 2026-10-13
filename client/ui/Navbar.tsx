@@ -4,6 +4,7 @@
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
+import LogoutButton from "@/components/auth/Logout";
 import {
   MdAccountCircle,
   MdChevronRight,
@@ -57,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ setTheme }) => {
 
   return (
     <>
-      <header className="relative z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-white/10 bg-[#111318]/75 px-4 backdrop-blur-2xl sm:px-6">
+      <header className="relative z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-white/10 bg-[#111318]/20 px-4 backdrop-blur-2xl sm:px-6">
         {/* Breadcrumb */}
         <nav className="flex min-w-0 items-center gap-2 overflow-hidden text-sm text-white/70">
           <span className="shrink-0">Home</span>
@@ -74,6 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({ setTheme }) => {
 
         {/* Actions */}
         <div className="ml-3 flex shrink-0 items-center gap-1 sm:gap-3">
+
           <button
             type="button"
             onClick={() => setIsOpen(true)}
@@ -103,6 +105,9 @@ const Navbar: React.FC<NavbarProps> = ({ setTheme }) => {
               Harish
             </span>
           </button>
+              <LogoutButton />
+
+          
         </div>
       </header>
 

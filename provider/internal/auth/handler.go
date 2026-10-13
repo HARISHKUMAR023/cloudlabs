@@ -179,3 +179,43 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusOK, user)
 }
+
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+
+	if err := decodeBody(w, r, &req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid JSON body")
+		return
+	}
+
+	tokens, err := h.service.Refresh(r.Context(), req.RefreshToken)
+	if err != nil {
+		if errors.Is(err, ErrInvalidRefreshToken) {
+			respondError(w, http.StatusUnauthorized, "Invalid or expired refresh token")
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "Could not refresh session")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, tokens)
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+
+	if err := decodeBody(w, r, &req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid JSON body")
+		return
+	}
+
+	if err := h.service.Logout(r.Context(), req.RefreshToken); err != nil {
+		respondError(w, http.StatusInternalServerError, "Could not end session")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Session ended",
+	})
+}

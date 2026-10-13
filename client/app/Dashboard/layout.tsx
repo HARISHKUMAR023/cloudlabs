@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Navbar from "../../ui/Navbar";
 import SideNav from "../../ui/Sidebar";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 export default function MainLayout({
   children,
@@ -12,10 +13,11 @@ export default function MainLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [themeClass, setThemeClass] = useState(
-    "bg-[url('/images/bg1.jpg')] bg-cover bg-center"
+    "bg-[url('/images/bg3.jpg')] bg-cover bg-center"
   );
 
   return (
+        <AuthGuard>
     <div className="relative flex h-dvh w-full overflow-hidden bg-[#0B0D12] text-white">
       {/* Background */}
       <div
@@ -42,7 +44,7 @@ export default function MainLayout({
         ].join(" ")}
       >
         {/* Navbar */}
-        <header className="z-30 shrink-0 border-b border-white/10 bg-[#111318]/80 backdrop-blur-xl">
+        <header className="z-30 shrink-0 border-b border-white/10 bg-[#111318]/30 backdrop-blur-xl">
           <Navbar
             toggleSidebar={() =>
               setSidebarOpen((prev) => !prev)
@@ -57,5 +59,6 @@ export default function MainLayout({
         </main>
       </div>
     </div>
+    </AuthGuard>
   );
 }

@@ -24,6 +24,7 @@ import (
 	_ "provider/docs"
 	"provider/internal/auth"
 	"provider/internal/platform/postgres"
+	"github.com/go-chi/cors"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -67,6 +68,21 @@ func main() {
 	// Configure routes.
 	router := chi.NewRouter()
 
+	router.Use(cors.Handler(cors.Options{
+    AllowedOrigins: []string{
+        "http://localhost:8000",
+		"*",
+    },
+    AllowedMethods: []string{
+        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
+    },
+    AllowedHeaders: []string{
+        "Accept", "Authorization", "Content-Type",
+    },
+    AllowCredentials: false,
+    MaxAge: 300,
+}))
+
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
@@ -77,6 +93,8 @@ func main() {
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/register", handler.Register)
 		r.Post("/auth/login", handler.Login)
+		r.Post("/auth/refresh", handler.Refresh)
+		r.Post("/auth/logout", handler.Logout)
 
 		r.Group(func(r chi.Router) {
 			r.Use(handler.JWTAuth)
@@ -95,7 +113,7 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 
-	log.Println("Code Kadai Auth API listening on :8080")
+	log.Println("Code Kadai Auth API listening on :8000")
 
 	if err := server.ListenAndServe(); err != nil &&
 		err != http.ErrServerClosed {

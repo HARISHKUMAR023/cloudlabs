@@ -1,8 +1,11 @@
-
 package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"net/mail"
 	"strings"
@@ -92,8 +95,7 @@ func (s *Service) Login(
 ) (TokenResponse, error) {
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 
-	if email == "" || len(req.Password) == 0 ||
-		len(req.Password) > 72 {
+	if email == "" || len(req.Password) == 0 || len(req.Password) > 72 {
 		return TokenResponse{}, ErrInvalidCredentials
 	}
 
@@ -106,37 +108,36 @@ func (s *Service) Login(
 	}
 
 	if err := bcrypt.CompareHashAndPassword(
-		[]byte(user.PasswordHash),
-		[]byte(req.Password),
+		[]byte(user.PasswordHash), []byte(req.Password),
 	); err != nil {
 		return TokenResponse{}, ErrInvalidCredentials
 	}
 
-	now := time.Now()
-
-	claims := Claims{
-		Email: user.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   user.ID,
-			Issuer:    "codekadai-auth",
-			Audience:  jwt.ClaimStrings{"codekadai-api"},
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(tokenTTL)),
-		},
+	accessToken, err := s.createAccessToken(user)
+	if err != nil {
+		return TokenResponse{}, err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	refreshToken, err := generateRefreshToken()
+	if err != nil {
+		return TokenResponse{}, err
+	}
 
-	signed, err := token.SignedString(s.jwtSecret)
+	err = s.repo.CreateRefreshSession(
+		ctx,
+		user.ID,
+		hashRefreshToken(refreshToken),
+		time.Now().Add(refreshTokenTTL),
+	)
 	if err != nil {
 		return TokenResponse{}, err
 	}
 
 	return TokenResponse{
-		AccessToken: signed,
-		TokenType:   "Bearer",
-		ExpiresIn:   int64(tokenTTL.Seconds()),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    int64(tokenTTL.Seconds()),
 	}, nil
 }
 
@@ -181,3 +182,96 @@ func (s *Service) GetUser(
 		CreatedAt: user.CreatedAt,
 	}, nil
 }
+
+const refreshTokenTTL = 30 * 24 * time.Hour
+
+func generateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func hashRefreshToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+func (s *Service) createAccessToken(user User) (string, error) {
+	now := time.Now()
+
+	claims := Claims{
+		Email: user.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   user.ID,
+			Issuer:    "codekadai-auth",
+			Audience:  jwt.ClaimStrings{"codekadai-api"},
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(tokenTTL)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(s.jwtSecret)
+}
+
+
+
+func (s *Service) Refresh(
+    ctx context.Context,
+    rawRefreshToken string,
+) (TokenResponse, error) {
+    if rawRefreshToken == "" || len(rawRefreshToken) > 256 {
+        return TokenResponse{}, ErrInvalidRefreshToken
+    }
+
+    newRefreshToken, err := generateRefreshToken()
+    if err != nil {
+        return TokenResponse{}, err
+    }
+
+    userID, err := s.repo.RotateRefreshSession(
+        ctx,
+        hashRefreshToken(rawRefreshToken),
+        hashRefreshToken(newRefreshToken),
+        time.Now().Add(refreshTokenTTL),
+    )
+    if err != nil {
+        return TokenResponse{}, err
+    }
+
+    user, err := s.repo.GetByID(ctx, userID)
+    if err != nil {
+        return TokenResponse{}, err
+    }
+
+    accessToken, err := s.createAccessToken(user)
+    if err != nil {
+        return TokenResponse{}, err
+    }
+
+    return TokenResponse{
+        AccessToken:  accessToken,
+        RefreshToken: newRefreshToken,
+        TokenType:    "Bearer",
+        ExpiresIn:    int64(tokenTTL.Seconds()),
+    }, nil
+}
+
+func (s *Service) Logout(
+    ctx context.Context,
+    rawRefreshToken string,
+) error {
+    if rawRefreshToken == "" || len(rawRefreshToken) > 256 {
+        return ErrInvalidRefreshToken
+    }
+
+    return s.repo.RevokeRefreshSession(
+        ctx,
+        hashRefreshToken(rawRefreshToken),
+    )
+}
+

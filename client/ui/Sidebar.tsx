@@ -49,6 +49,16 @@ const sidebarItems: SidebarItem[] = [
       { title: "Deploy Machine", popup: true },
     ],
   },
+    {
+    title: "Network",
+    icon: Monitor,
+    children: [
+       { title: "Add Servies",path: "" },
+      { title: "My Devices", path: "" },
+      
+     
+    ],
+  },
   {
     title: "Storage",
     icon: Database,
@@ -120,7 +130,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     <aside
       className={[
         "fixed inset-y-0 left-0 z-40 flex h-dvh flex-col",
-        "border-r border-white/10 bg-[#111318]/85 text-white",
+        "border-r border-white/10 bg-[#111318]/30 text-white",
         "backdrop-blur-2xl shadow-xl shadow-black/10",
         "transition-[width] duration-300 ease-in-out",
         isOpen ? "w-64" : "w-20",
