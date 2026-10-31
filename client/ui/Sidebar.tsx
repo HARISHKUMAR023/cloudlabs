@@ -53,7 +53,7 @@ const sidebarItems: SidebarItem[] = [
     title: "Network",
     icon: Monitor,
     children: [
-       { title: "Add Servies",path: "" },
+       { title: "Add Servies",path: "/Dashboard/vpn" },
       { title: "My Devices", path: "" },
       
      

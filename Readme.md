@@ -113,8 +113,7 @@ Apply the project's database migrations before starting the backend.
 For a SQL schema file:
 
 ```bash
-docker exec -i cloudlabs-postgres \
-  psql -U admin -d cloudlabs < path/to/schema.sql
+sudo docker exec -i cloudlabs-postgres   psql -U admin -d cloudlabs < create_refresh_sessions.sql
 ```
 
 Replace the container name and SQL file path with the values used in your environment. If the project uses versioned migrations, follow the configured migration workflow instead.

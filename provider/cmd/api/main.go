@@ -1,6 +1,27 @@
-// @title Cloud Lab API
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "provider/docs"
+	"provider/internal/auth"
+	"provider/internal/platform/postgres"
+	"provider/internal/vpn"
+)
+
+// @title Code Kadai API
 // @version 1.0
-// @description API documentation for the Cloud Lab platform.
+// @description Authentication and VPN management API for Code Kadai.
 // @BasePath /
 // @schemes http
 //
@@ -9,34 +30,13 @@
 // @name Authorization
 // @description Enter your JWT token as: Bearer <token>
 
-package main
-
-import (
-	"context"
-	"log"
-	"net/http"
-	"os"
-	"time"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
-
-	_ "provider/docs"
-	"provider/internal/auth"
-	"provider/internal/platform/postgres"
-	"github.com/go-chi/cors"
-
-	httpSwagger "github.com/swaggo/http-swagger/v2"
-)
-
 func main() {
-	// Load .env from the project root.
-	// This path assumes you run the application from cmd/api.
+	// Load environment variables from .env in the working directory.
 	if err := godotenv.Load(".env"); err != nil {
-		log.Printf("Warning: could not load .env file: %v", err)
+		log.Printf("No .env file loaded: %v", err)
 	}
-	// Read environment variables.
-	databaseURL := os.Getenv("DATABASE_URL")
+
+	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	if databaseURL == "" {
@@ -44,79 +44,145 @@ func main() {
 	}
 
 	if len(jwtSecret) < 32 {
-		log.Fatal("JWT_SECRET must be at least 32 characters")
+		log.Fatal("JWT_SECRET must contain at least 32 characters")
 	}
 
-	// Connect to PostgreSQL with a 10-second timeout.
+	// Connect to PostgreSQL.
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		10*time.Second,
+		15*time.Second,
 	)
 	defer cancel()
 
 	db, err := postgres.Connect(ctx, databaseURL)
 	if err != nil {
-		log.Fatalf("Database connection failed: %v", err)
+		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
 	defer db.Close()
 
-	// Initialize authentication dependencies.
-	repo := auth.NewRepository(db)
-	service := auth.NewService(repo, jwtSecret)
-	handler := auth.NewHandler(service)
+	// Initialize the existing authentication service.
+	authRepo := auth.NewRepository(db)
+	authService := auth.NewService(authRepo, jwtSecret)
+	authHandler := auth.NewHandler(authService)
 
-	// Configure routes.
+	// Initialize VPN management.
+	// This configures the existing WireGuard interface; it does not
+	// replace wg0.conf or restart the interface.
+	vpnConfig := vpn.Config{
+		InterfaceName:  strings.TrimSpace(os.Getenv("WG_INTERFACE")),
+		ServerAddress:  strings.TrimSpace(os.Getenv("WG_SERVER_ADDRESS")),
+		ClientCIDR:     strings.TrimSpace(os.Getenv("WG_CLIENT_CIDR")),
+		ServerEndpoint: strings.TrimSpace(os.Getenv("WG_SERVER_ENDPOINT")),
+		DNS:            strings.TrimSpace(os.Getenv("WG_DNS")),
+		FirstHost:      10,
+	}
+
+	if err := vpn.ValidateConfig(vpnConfig); err != nil {
+		log.Fatalf("Invalid VPN configuration: %v", err)
+	}
+
+	vpnRepo := vpn.NewRepository(db)
+	vpnService := vpn.NewService(vpnRepo, vpnConfig)
+
+	vpnHandler := vpn.NewHandler(
+		vpnService,
+		func(r *http.Request) (string, bool) {
+			return auth.UserIDFromContext(r.Context())
+		},
+	)
+
+	// Initialize the HTTP router.
 	router := chi.NewRouter()
 
+	// Configure CORS.
+	// Set FRONTEND_ORIGIN to the exact origin used by your browser.
+	frontendOrigin := strings.TrimSpace(os.Getenv("FRONTEND_ORIGIN"))
+	if frontendOrigin == "" {
+		frontendOrigin = "*"
+
+	}
+
 	router.Use(cors.Handler(cors.Options{
-    AllowedOrigins: []string{
-        "http://localhost:8000",
-		"*",
-    },
-    AllowedMethods: []string{
-        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
-    },
-    AllowedHeaders: []string{
-        "Accept", "Authorization", "Content-Type",
-    },
-    AllowCredentials: false,
-    MaxAge: 300,
-}))
+		AllowedOrigins: []string{
+			frontendOrigin,
+		},
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"PATCH",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+		},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
+	// Basic health check.
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	router.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
+
+	// Swagger documentation.
+	router.Get(
+		"/swagger/*",
+		httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+		),
+	)
+
+	// API routes.
 	router.Route("/api/v1", func(r chi.Router) {
-		r.Post("/auth/register", handler.Register)
-		r.Post("/auth/login", handler.Login)
-		r.Post("/auth/refresh", handler.Refresh)
-		r.Post("/auth/logout", handler.Logout)
+		// Public authentication endpoints.
+		r.Post("/auth/register", authHandler.Register)
+		r.Post("/auth/login", authHandler.Login)
+		r.Post("/auth/refresh", authHandler.Refresh)
+		r.Post("/auth/logout", authHandler.Logout)
 
-		r.Group(func(r chi.Router) {
-			r.Use(handler.JWTAuth)
-			r.Get("/users/me", handler.Me)
+		// Protected endpoints.
+		r.Group(func(protected chi.Router) {
+			protected.Use(authHandler.JWTAuth)
+
+			// Current authenticated user.
+			protected.Get("/users/me", authHandler.Me)
+
+			// VPN management endpoints.
+			protected.Route("/vpn", func(v chi.Router) {
+				v.Get("/server", vpnHandler.ServerInfo)
+				v.Post("/peers", vpnHandler.CreatePeer)
+				v.Get("/peers", vpnHandler.ListPeers)
+				v.Get("/peers/{id}", vpnHandler.GetPeer)
+				v.Delete("/peers/{id}", vpnHandler.RevokePeer)
+			})
 		})
-
 	})
 
-	// Start HTTP server.
+	// Start the HTTP server.
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "8000"
+	}
+
 	server := &http.Server{
-		Addr:              ":8000",
+		Addr:              ":" + port,
 		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      10 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
 
-	log.Println("Code Kadai Auth API listening on :8000")
+	log.Printf("Code Kadai API listening on :%s", port)
 
 	if err := server.ListenAndServe(); err != nil &&
 		err != http.ErrServerClosed {
-		log.Fatalf("HTTP server failed: %v", err)
+		log.Fatalf("API server failed: %v", err)
 	}
 }

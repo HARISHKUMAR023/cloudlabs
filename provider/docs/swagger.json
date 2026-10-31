@@ -4,8 +4,8 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "API documentation for the Cloud Lab platform.",
-        "title": "Cloud Lab API",
+        "description": "Authentication and VPN management API for Code Kadai.",
+        "title": "Code Kadai API",
         "contact": {},
         "version": "1.0"
     },
