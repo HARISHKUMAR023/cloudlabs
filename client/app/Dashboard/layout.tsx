@@ -46,9 +46,9 @@ export default function MainLayout({
         {/* Navbar */}
         <header className="z-30 shrink-0 border-b border-white/10 bg-[#111318]/30 backdrop-blur-xl">
           <Navbar
-            toggleSidebar={() =>
-              setSidebarOpen((prev) => !prev)
-            }
+            // toggleSidebar={() =>
+            //   setSidebarOpen((prev) => !prev)
+            // }
             setTheme={setThemeClass}
           />
         </header>

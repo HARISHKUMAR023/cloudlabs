@@ -7,4 +7,21 @@ curl -i -X POST http://localhost:8000/api/v1/auth/login \
 
 
 
-  
+  curl -X GET "http://localhost:8000/api/v1/vpn/peers" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhcmlzaGt1bWFyc3AwMjNAZ21haWwuY29tIiwiaXNzIjoiY29kZWthZGFpLWF1dGgiLCJzdWIiOiIwODk5NDg4Yy05NDRmLTQzMDEtOWZkZC01NWVlNzVkZmE1ZTAiLCJhdWQiOlsiY29kZWthZGFpLWFwaSJdLCJleHAiOjE3OTM0NTgwNjEsIm5iZiI6MTc5MzQ1NzE2MSwiaWF0IjoxNzkzNDU3MTYxfQ.j_BI9tc6mJcQVpa-wzE9BduPT3qogIyIUFGa2QWGkJM" \
+  -H "Accept: application/json"
+
+
+
+  sudo setpriv \
+  --reuid=ubuntu \
+  --regid=ubuntu \
+  --init-groups \
+  --inh-caps=+net_admin \
+  --ambient-caps=+net_admin \
+  --bounding-set=+net_admin \
+  env HOME=/home/ubuntu \
+      GOCACHE=/home/ubuntu/.cache/go-build \
+      GOPATH=/home/ubuntu/go \
+  /usr/local/go/bin/go run ./cmd/api
+2026/10/31 13:45:39 Code Kadai API listening on :8000

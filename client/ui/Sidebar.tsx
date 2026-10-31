@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  HardDrive,
   Upload,
   X,
   type LucideIcon,
@@ -53,8 +52,8 @@ const sidebarItems: SidebarItem[] = [
     title: "Network",
     icon: Monitor,
     children: [
-       { title: "Add Servies",path: "/Dashboard/vpn" },
-      { title: "My Devices", path: "" },
+       { title: "Add Device", path: "/Dashboard/vpn" },
+      { title: "My Devices", path: "/Dashboard/vpn/Devices" },
       
      
     ],
@@ -250,16 +249,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             !!child.path && pathname === child.path;
                           const childPopupIsOpen = popupItem === child.title;
                           const cs = pickState(childIsActive, childPopupIsOpen);
-                          const ChildIcon =
-                            child.title === "Deploy Machine"
-                              ? Monitor
-                              : child.title === "Upload File"
-                              ? Upload
-                              : child.title === "MinIO"
-                              ? HardDrive
-                              : ChevronRight;
-
-                          return (
+return (
                             <li key={child.title}>
                               {child.popup ? (
                                 <button
@@ -268,7 +258,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                   className={`group relative flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${ring} ${state[cs]}`}
                                   aria-expanded={childPopupIsOpen}
                                 >
-                                  <ChildIcon size={15} className={`shrink-0 ${iconState[cs]}`} />
                                   <span className="min-w-0 flex-1 truncate">
                                     {child.title}
                                   </span>
@@ -280,7 +269,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                   aria-current={childIsActive ? "page" : undefined}
                                 >
                                   {childIsActive && <ActiveBar />}
-                                  <ChildIcon size={15} className={`shrink-0 ${iconState[cs]}`} />
                                   <span className="min-w-0 flex-1 truncate">
                                     {child.title}
                                   </span>
@@ -292,7 +280,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <div className="mt-2 rounded-xl border border-white/10 bg-[#171922]/95 p-3 shadow-xl backdrop-blur-xl">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-center gap-2">
-                                      <ChildIcon size={17} className="shrink-0 text-red-400" />
+                                      {child.title === "Deploy Machine" ? <Monitor size={17} className="shrink-0 text-red-400" /> : <Upload size={17} className="shrink-0 text-red-400" />}
                                       <h3 className="text-sm font-semibold text-white">
                                         {child.title}
                                       </h3>

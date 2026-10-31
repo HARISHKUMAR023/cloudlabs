@@ -29,27 +29,7 @@ Cloud Lab enables colleges, training institutes, and edtech platforms to provide
 | Development Environment | Ubuntu, code-server |
 
 ## Architecture
-
-```text
-                    Client
-                      |
-                      v
-                Next.js Frontend
-                      |
-                      v
-                Apache APISIX
-                      |
-                      v
-                  Go Backend
-                      |
-          +-----------+-----------+
-          |           |           |
-          v           v           v
-      PostgreSQL    Redis      Docker
-                                  |
-                                  v
-                         Ubuntu + VS Code
-```
+![Cloud Lab](docs/arc.png)
 
 ## Getting Started
 
